@@ -1,0 +1,9 @@
+[Confluent.dist]
+name=Confluent repository (dist)
+baseurl=http://packages.confluent.io/rpm/5.3/7
+
+[Confluent]
+name=Confluent repository
+baseurl=http://packages.confluent.io/rpm/5.3
+
+
