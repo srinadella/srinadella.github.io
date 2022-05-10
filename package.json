@@ -1,0 +1,8 @@
+{
+	"scripts": {
+		"deploy": "npm run build && gh-pages -d dist --repo https://github.com/srinadella/srinadella.github.io.git"
+	},
+	"devDependencies": {
+		"gh-pages": "^3.2.3"
+	}
+}
