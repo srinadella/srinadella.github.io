@@ -338,7 +338,7 @@ ul#nav li.current a { color: #F06000; }
 }
 
 .eda {
-  	width: 90%;
+   width: 90%;
   	-moz-animation: photoshop 2s ease;
   	-webkit-animation: photoshop 2s ease;
 }
@@ -369,12 +369,12 @@ ul#nav li.current a { color: #F06000; }
   	-webkit-animation: html5 2s ease;
 }
 .itil {
-  	width: 70%;
+   width: 70%;
   	-moz-animation: jquery 2s ease;
   	-webkit-animation: jquery 2s ease;
 }
 .microservices {
-  	width: 70%;
+   width: 70%;
   	-moz-animation: jquery 2s ease;
   	-webkit-animation: jquery 2s ease;
 }
@@ -437,6 +437,66 @@ ul#nav li.current a { color: #F06000; }
 @-webkit-keyframes jquery {
   0%   { width: 0px;  }
   100% { width: 50%;  }
+}
+
+.devops {
+   width: 85%;
+   -moz-animation: photoshop 2s ease;
+   -webkit-animation: photoshop 2s ease;
+}
+
+.cicd {
+   width: 80%;
+   -moz-animation: photoshop 2s ease;
+   -webkit-animation: photoshop 2s ease;
+}
+
+.terraform {
+   width: 75%;
+   -moz-animation: photoshop 2s ease;
+   -webkit-animation: photoshop 2s ease;
+}
+
+.docker {
+   width: 70%;
+   -moz-animation: photoshop 2s ease;
+   -webkit-animation: photoshop 2s ease;
+}
+
+.kubernetes {
+   width: 80%;
+   -moz-animation: photoshop 2s ease;
+   -webkit-animation: photoshop 2s ease;
+}
+
+.cloudnative {
+   width: 85%;
+   -moz-animation: photoshop 2s ease;
+   -webkit-animation: photoshop 2s ease;
+}
+
+.apidesign {
+   width: 75%;
+   -moz-animation: photoshop 2s ease;
+   -webkit-animation: photoshop 2s ease;
+}
+
+.eventdriven {
+   width: 90%;
+   -moz-animation: photoshop 2s ease;
+   -webkit-animation: photoshop 2s ease;
+}
+
+.integration {
+   width: 80%;
+   -moz-animation: photoshop 2s ease;
+   -webkit-animation: photoshop 2s ease;
+}
+
+.agileleadership {
+   width: 70%;
+   -moz-animation: photoshop 2s ease;
+   -webkit-animation: photoshop 2s ease;
 }
 
 /* ------------------------------------------------------------------ */
