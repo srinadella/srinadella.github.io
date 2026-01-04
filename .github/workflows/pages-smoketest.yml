@@ -24,6 +24,8 @@ jobs:
 
       - name: Optionally check for expected content in /mindbody/
         run: |
-          CONTENT=$(curl -s https://srinadella.github.io/mindbody/ | head -n 20)
+          CONTENT=$(curl -s https://srinadella.github.io/mindbody/ | head -n 40)
           echo "$CONTENT"
+          # If we get an empty shell, look for the redirect script or a hash marker
+          echo "$CONTENT" | grep -i "#\/" || echo "no-hash"
           echo "$CONTENT" | grep -i "BodyMind" || true
