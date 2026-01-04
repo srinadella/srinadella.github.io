@@ -6,6 +6,7 @@ What I configured:
 - The Mindbody app (`/mindbody`) is configured with `base: "/mindbody/"` in `mindbody/vite.config.ts`.
 - The Mindbody build outputs to `docs/mindbody` so GitHub Pages can serve it from the `docs/` folder.
 - `HashRouter` is used in `mindbody/src/main.tsx` to make client-side routing compatible with GitHub Pages.
+- A small client-side script is included in `mindbody/index.html` to redirect `/mindbody/` to `/mindbody/#/` when no hash is present, ensuring `HashRouter` sees the right location.
 - A GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) builds the app on push to `main` and deploys `docs/` to GitHub Pages.
 
 How to test locally:

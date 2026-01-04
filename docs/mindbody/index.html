@@ -4,8 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>BodyMind App</title>
-    <script type="module" crossorigin src="assets/index-CsmIAnNh.js"></script>
-    <link rel="stylesheet" crossorigin href="assets/index-C0IlRIgF.css">
+    <script>
+      // Redirect to hash-based route if loaded at /mindbody/ without a hash
+      if (!location.hash && /\/mindbody\/?$/.test(location.pathname)) {
+        location.replace(location.pathname.replace(/\/?$/, '/') + '#/');
+      }
+    </script>
+    <script type="module" crossorigin src="/mindbody/assets/index-DhNYA3Mj.js"></script>
+    <link rel="stylesheet" crossorigin href="/mindbody/assets/index-C0IlRIgF.css">
   </head>
   <body>
     <div id="root"></div>
