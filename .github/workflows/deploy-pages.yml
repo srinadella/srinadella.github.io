@@ -1,0 +1,45 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install and build mindbody app
+        working-directory: ./mindbody
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare docs directory
+        run: |
+          mkdir -p docs
+          # Copy the root static site into docs so the site root is served by GitHub Pages
+          cp -R index.html css js images inc LICENSE favicon.png docs/ || true
+          # Optional: copy fonts or public if they exist
+          if [ -d fonts ]; then cp -R fonts docs/ || true; fi
+          if [ -d public ]; then cp -R public docs/ || true; fi
+          ls -la docs
+
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: docs
+
+# The Pages deployment will be performed automatically after the artifact is uploaded.

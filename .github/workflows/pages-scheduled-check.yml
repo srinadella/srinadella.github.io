@@ -1,0 +1,35 @@
+name: Scheduled Pages link check
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # every day at 06:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check root URL returns 200
+        run: |
+          echo "Checking https://srinadella.github.io/"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://srinadella.github.io/)
+          echo "Status: $STATUS"
+          if [ "$STATUS" != "200" ]; then echo "Root site returned $STATUS" && exit 1; fi
+
+      - name: Check /mindbody/ URL returns 200
+        run: |
+          echo "Checking https://srinadella.github.io/mindbody/"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://srinadella.github.io/mindbody/)
+          echo "Status: $STATUS"
+          if [ "$STATUS" != "200" ]; then echo "/mindbody/ returned $STATUS" && exit 1; fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Run Linkinator to scan site links
+        run: |
+          # Run a recursive link scan; this may take a while on large sites
+          npx --yes linkinator https://srinadella.github.io/ --silent --concurrency 10 --recurse --verbose

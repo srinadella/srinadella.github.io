@@ -1,0 +1,29 @@
+name: Pages smoke test
+
+on:
+  pages:
+    types: [published]
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check root URL returns 200
+        run: |
+          echo "Checking https://srinadella.github.io/"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://srinadella.github.io/)
+          echo "Status: $STATUS"
+          if [ "$STATUS" != "200" ]; then echo "Root site returned $STATUS" && exit 1; fi
+
+      - name: Check /mindbody/ URL returns 200
+        run: |
+          echo "Checking https://srinadella.github.io/mindbody/"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://srinadella.github.io/mindbody/)
+          echo "Status: $STATUS"
+          if [ "$STATUS" != "200" ]; then echo "/mindbody/ returned $STATUS" && exit 1; fi
+
+      - name: Optionally check for expected content in /mindbody/
+        run: |
+          CONTENT=$(curl -s https://srinadella.github.io/mindbody/ | head -n 20)
+          echo "$CONTENT"
+          echo "$CONTENT" | grep -i "BodyMind" || true
