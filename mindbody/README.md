@@ -30,6 +30,9 @@ GitHub Pages
 Routing
 - The app uses `HashRouter` so client-side routing works correctly on GitHub Pages without server configuration.
 
+Local persistence
+- Users can now capture health metrics (sleep, focus, training load) from the dashboard; entries are saved to `localStorage` per profile and used to populate charts and metrics.
+
 If you'd like, I can also:
 - Add an npm script to copy a local build into `docs/` for local preview.
 - Add a `404.html` fallback or set up a `CNAME` for a custom domain.

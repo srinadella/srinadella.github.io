@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend } from "chart.js";
 import { Line } from "react-chartjs-2";
 
@@ -26,20 +27,109 @@ export default function HomePage() {
     setMounted(true);
   }, []);
 
+  // ----- local storage backed metrics -----
+  import.meta.env; // keep bundler happy if unused
+
+  type MetricEntry = { date: string; value: number };
+  type ProfileMetrics = {
+    sleep: MetricEntry[];
+    focus: MetricEntry[];
+    load: MetricEntry[];
+  };
+
+  const [metricsByProfile, setMetricsByProfile] = useLocalStorage<Record<string, ProfileMetrics>>("metrics", {});
+
   const activeProfile = MOCK_PROFILES.find((p) => p.id === activeProfileId) ?? MOCK_PROFILES[0];
 
+  const ensureProfileMetrics = (id: string): ProfileMetrics => {
+    const existing = metricsByProfile[id];
+    return existing ?? { sleep: [], focus: [], load: [] };
+  };
+
+  // helpers
+  const isoToday = () => new Date().toISOString().slice(0, 10);
+  const upsertEntry = (arr: MetricEntry[], date: string, value: number) => {
+    const idx = arr.findIndex((e) => e.date === date);
+    const copy = [...arr];
+    if (idx === -1) copy.push({ date, value });
+    else copy[idx] = { date, value };
+    // keep sorted by date
+    copy.sort((a, b) => (a.date > b.date ? 1 : -1));
+    return copy;
+  };
+
+  function saveMetric(profileId: string, metric: keyof ProfileMetrics, value: number) {
+    const cur = ensureProfileMetrics(profileId);
+    const updated = { ...cur, [metric]: upsertEntry(cur[metric], isoToday(), value) } as ProfileMetrics;
+    setMetricsByProfile({ ...metricsByProfile, [profileId]: updated });
+  }
+
+  function resetMetrics(profileId: string) {
+    setMetricsByProfile({ ...metricsByProfile, [profileId]: { sleep: [], focus: [], load: [] } });
+  }
+
+  function lastNLabels(n = 7) {
+    const days: string[] = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toLocaleDateString(undefined, { weekday: "short" }));
+    }
+    return days;
+  }
+
+  function seriesFor(profileId: string, metric: keyof ProfileMetrics, n = 7) {
+    const cur = ensureProfileMetrics(profileId);
+    const arr = cur[metric];
+    const values: number[] = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const iso = d.toISOString().slice(0, 10);
+      const found = arr.find((e) => e.date === iso);
+      values.push(found?.value ?? NaN);
+    }
+    return values;
+  }
+
+  // local input states for quick capture
+  const [sleepInput, setSleepInput] = useState<string>("");
+  const [focusInput, setFocusInput] = useState<string>("");
+  const [loadInput, setLoadInput] = useState<string>("");
+
+
+  const labels = lastNLabels();
+  // mock fallback for any missing days
+  const MOCK_SERIES = [72, 78, 81, 75, 82, 88, 90];
+  const sleepSeries = seriesFor(activeProfileId, "sleep");
+  const finalSleep = sleepSeries.map((v, i) => (Number.isFinite(v) ? v : MOCK_SERIES[i] ?? NaN));
+
+  const MOCK_FOCUS = [5, 6, 7, 6, 7, 8, 7];
+  const focusSeries = seriesFor(activeProfileId, "focus");
+  const finalFocus = focusSeries.map((v, i) => (Number.isFinite(v) ? v : MOCK_FOCUS[i] ?? NaN));
+
   const lineData = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    labels,
     datasets: [
       {
         label: "Sleep score",
-        data: [72, 78, 81, 75, 82, 88, 90],
+        data: finalSleep,
         borderColor: "rgba(96, 165, 250, 1)",
         backgroundColor: "rgba(59, 130, 246, 0.25)",
         tension: 0.35,
         fill: true,
         pointRadius: 3,
         pointBackgroundColor: "rgba(248, 250, 252, 1)",
+      },
+      {
+        label: "Focus",
+        data: finalFocus,
+        borderColor: "rgba(249, 115, 115, 1)",
+        backgroundColor: "rgba(249, 115, 115, 0.1)",
+        tension: 0.35,
+        fill: false,
+        pointRadius: 2,
+        borderDash: [6, 4],
       },
     ],
   };
@@ -191,8 +281,27 @@ export default function HomePage() {
                 </div>
                 <div className="d-flex align-items-end gap-3">
                   <div>
-                    <div style={{ fontSize: "2.1rem", fontWeight: 600 }}>82</div>
-                    <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Composite sleep score</div>
+                    {(() => {
+                      const m = ensureProfileMetrics(activeProfileId).sleep;
+                      const latest = m.length ? m[m.length - 1].value : 82;
+                      return (
+                        <>
+                          <div style={{ fontSize: "2.1rem", fontWeight: 600 }}>{latest}</div>
+                          <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Composite sleep score</div>
+                        </>
+                      );
+                    })()}
+                    <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                      <input
+                        aria-label="sleep score"
+                        value={sleepInput}
+                        onChange={(e) => setSleepInput(e.target.value)}
+                        placeholder="score"
+                        style={{ width: 70, padding: "6px 8px", borderRadius: 6, border: "1px solid rgba(148,163,184,0.25)" }}
+                      />
+                      <button type="button" onClick={() => { const v = Number(sleepInput); if (!Number.isFinite(v)) return; saveMetric(activeProfileId, "sleep", v); setSleepInput(""); }} className="bm-profile-pill">Add</button>
+                      <button type="button" onClick={() => resetMetrics(activeProfileId)} className="bm-profile-pill" style={{ background: "transparent", border: "1px solid rgba(148,163,184,0.15)" }}>Reset</button>
+                    </div>
                   </div>
                   <div className="ms-auto text-end">
                     <div style={{ fontSize: "0.8rem", color: "#4ade80" }}>+6 vs baseline</div>
@@ -219,8 +328,26 @@ export default function HomePage() {
                 </div>
                 <div className="d-flex align-items-end gap-3">
                   <div>
-                    <div style={{ fontSize: "2.1rem", fontWeight: 600 }}>7.3</div>
-                    <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Self-reported focus</div>
+                    {(() => {
+                      const m = ensureProfileMetrics(activeProfileId).focus;
+                      const latest = m.length ? m[m.length - 1].value : 7.3;
+                      return (
+                        <>
+                          <div style={{ fontSize: "2.1rem", fontWeight: 600 }}>{latest}</div>
+                          <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Self-reported focus</div>
+                        </>
+                      );
+                    })()}
+                    <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                      <input
+                        aria-label="focus"
+                        value={focusInput}
+                        onChange={(e) => setFocusInput(e.target.value)}
+                        placeholder="0-10"
+                        style={{ width: 70, padding: "6px 8px", borderRadius: 6, border: "1px solid rgba(148,163,184,0.25)" }}
+                      />
+                      <button type="button" onClick={() => { const v = Number(focusInput); if (!Number.isFinite(v)) return; saveMetric(activeProfileId, "focus", v); setFocusInput(""); }} className="bm-profile-pill">Add</button>
+                    </div>
                   </div>
                   <div className="ms-auto text-end">
                     <div style={{ fontSize: "0.8rem", color: "#f97373" }}>High band</div>
@@ -249,8 +376,26 @@ export default function HomePage() {
                 </div>
                 <div className="d-flex align-items-end gap-3">
                   <div>
-                    <div style={{ fontSize: "2.1rem", fontWeight: 600 }}>0.84</div>
-                    <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Load:recovery ratio</div>
+                    {(() => {
+                      const m = ensureProfileMetrics(activeProfileId).load;
+                      const latest = m.length ? m[m.length - 1].value : 0.84;
+                      return (
+                        <>
+                          <div style={{ fontSize: "2.1rem", fontWeight: 600 }}>{latest}</div>
+                          <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Load:recovery ratio</div>
+                        </>
+                      );
+                    })()}
+                    <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                      <input
+                        aria-label="training load"
+                        value={loadInput}
+                        onChange={(e) => setLoadInput(e.target.value)}
+                        placeholder="ratio"
+                        style={{ width: 70, padding: "6px 8px", borderRadius: 6, border: "1px solid rgba(148,163,184,0.25)" }}
+                      />
+                      <button type="button" onClick={() => { const v = Number(loadInput); if (!Number.isFinite(v)) return; saveMetric(activeProfileId, "load", v); setLoadInput(""); }} className="bm-profile-pill">Add</button>
+                    </div>
                   </div>
                   <div className="ms-auto text-end">
                     <div style={{ fontSize: "0.8rem", color: "#4ade80" }}>Balanced</div>
